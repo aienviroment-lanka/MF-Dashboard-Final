@@ -7,4 +7,3 @@ beautifulsoup4==4.12.3
 lxml==5.2.2
 python-dateutil==2.9.0
 pytz==2024.1
-mftool==0.2.5
