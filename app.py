@@ -589,7 +589,7 @@ with tabs[4]:
     st.dataframe(
         bench_df.style
         .format({c: "{:.2f}" for c in bench_df.columns if "(" in c}, na_rep="—")
-        .map(_style_alpha, subset=alpha_cols)
+        .map(_style_alpha, subset=alpha_cols),
         use_container_width=True, height=400
     )
 
