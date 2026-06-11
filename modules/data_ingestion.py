@@ -225,7 +225,6 @@ def fetch_nifty50_history() -> pd.DataFrame:
 
 @st.cache_data(ttl=86400)
 def fetch_portfolio_holdings(scheme_code: str) -> dict:
-    """Portfolio endpoint not available on MFAPI."""
     return {
         "top_holdings"     : [],
         "sector_alloc"     : {},
@@ -233,47 +232,5 @@ def fetch_portfolio_holdings(scheme_code: str) -> dict:
         "cash_pct"         : None,
         "num_stocks"       : None,
         "portfolio_date"   : "N/A",
-        "source"           : "Not available via free API",
+        "source"           : "Not available",
     }
-
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def load_all_schemes(scheme_codes: list) -> tuple[list, datetime]:
-    """
-    Loads all scheme records. Returns (records_list, fetched_at).
-    """
-    nifty_df = fetch_nifty50_history()
-    records  = []
-    for code in scheme_codes:
-        rec = build_scheme_record(code, nifty_df)
-        records.append(rec)
-    return records, datetime.now()
-
-
-def compute_overlap(records: list) -> pd.DataFrame:
-    """
-    Computes portfolio overlap % between each pair of schemes.
-    Uses top-10 holding names as the set for Jaccard similarity.
-    """
-    names   = [r["scheme_name"].split("(")[0].strip()[:30] for r in records]
-    n       = len(names)
-    matrix  = np.zeros((n, n))
-
-    holding_sets = []
-    for r in records:
-        h_set = {h["name"] for h in r.get("top_holdings", []) if h["name"]}
-        holding_sets.append(h_set)
-
-    for i in range(n):
-        for j in range(n):
-            a, b = holding_sets[i], holding_sets[j]
-            if not a or not b:
-                matrix[i][j] = np.nan
-            elif i == j:
-                matrix[i][j] = 100.0
-            else:
-                inter  = len(a & b)
-                union  = len(a | b)
-                matrix[i][j] = round(inter / union * 100, 1) if union else 0
-
-    return pd.DataFrame(matrix, index=names, columns=names)
