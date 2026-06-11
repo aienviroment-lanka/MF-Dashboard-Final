@@ -226,54 +226,9 @@ def fetch_nifty50_history() -> pd.DataFrame:
 @st.cache_data(ttl=86400)
 def fetch_portfolio_holdings(scheme_code: str) -> dict:
     """
-    Attempts to get latest portfolio from mfapi.in/mf/{code}/portfolio
-    Falls back to a structured placeholder with category averages.
-    Returns dict with keys: top_holdings, sector_alloc, market_cap_alloc,
-                            cash_pct, num_stocks
+    Portfolio endpoint not available on MFAPI.
+    Returns structured empty dict — dashboard handles gracefully.
     """
-    url = f"{MFAPI_BASE}/{scheme_code}/portfolio"
-    data = _safe_get(url)
-
-    if data and isinstance(data, dict) and data.get("portfolioDate"):
-        holdings = data.get("holdings", [])
-        sectors  = {}
-        mktcap   = {}
-        top10    = []
-
-        for h in holdings[:10]:
-            top10.append({
-                "name"   : h.get("nameOfInstrument", ""),
-                "pct"    : h.get("percentageToNav", 0),
-                "sector" : h.get("industryName", ""),
-            })
-        for h in holdings:
-            s = h.get("industryName", "Other")
-            sectors[s] = sectors.get(s, 0) + h.get("percentageToNav", 0)
-        for h in holdings:
-            m = h.get("marketCapCategory", "Other")
-            mktcap[m] = mktcap.get(m, 0) + h.get("percentageToNav", 0)
-
-        cash_pct = sum(
-            h.get("percentageToNav", 0)
-            for h in holdings
-            if "cash" in h.get("nameOfInstrument", "").lower()
-               or "money market" in h.get("industryName", "").lower()
-        )
-
-        return {
-            "top_holdings"    : top10,
-            "sector_alloc"    : sectors,
-            "market_cap_alloc": mktcap,
-            "cash_pct"        : round(cash_pct, 2),
-            "num_stocks"      : len([
-                h for h in holdings
-                if h.get("instrumentType", "") == "Equity"
-            ]),
-            "portfolio_date"  : data.get("portfolioDate", "N/A"),
-            "source"          : "MFAPI / AMFI",
-        }
-
-    # ── structured fallback ──
     return {
         "top_holdings"     : [],
         "sector_alloc"     : {},
@@ -281,9 +236,8 @@ def fetch_portfolio_holdings(scheme_code: str) -> dict:
         "cash_pct"         : None,
         "num_stocks"       : None,
         "portfolio_date"   : "N/A",
-        "source"           : "Not available",
+        "source"           : "Portfolio data via AMFI monthly disclosure (not yet available)",
     }
-
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Master assembler — builds one record per scheme
