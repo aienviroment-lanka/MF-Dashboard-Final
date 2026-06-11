@@ -363,7 +363,7 @@ with tabs[0]:
         disp_df_sorted.style
         .format({c: "{:.2f}" for c in ret_cols if c in disp_df_sorted.columns}, na_rep="—")
         .format({"Latest NAV (₹)": "{:.4f}", "Num Stocks": "{:.0f}"}, na_rep="—")
-        .applymap(color_returns, subset=[c for c in ret_cols if c in disp_df_sorted.columns]),
+        .map(color_returns, subset=[c for c in ret_cols if c in disp_df_sorted.columns]),
         use_container_width=True,
         height=480,
     )

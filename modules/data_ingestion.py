@@ -225,10 +225,7 @@ def fetch_nifty50_history() -> pd.DataFrame:
 
 @st.cache_data(ttl=86400)
 def fetch_portfolio_holdings(scheme_code: str) -> dict:
-    """
-    Portfolio endpoint not available on MFAPI.
-    Returns structured empty dict — dashboard handles gracefully.
-    """
+    """Portfolio endpoint not available on MFAPI."""
     return {
         "top_holdings"     : [],
         "sector_alloc"     : {},
@@ -236,99 +233,7 @@ def fetch_portfolio_holdings(scheme_code: str) -> dict:
         "cash_pct"         : None,
         "num_stocks"       : None,
         "portfolio_date"   : "N/A",
-        "source"           : "Portfolio data via AMFI monthly disclosure (not yet available)",
-    }
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Master assembler — builds one record per scheme
-# ──────────────────────────────────────────────────────────────────────────────
-
-def build_scheme_record(scheme_code: str, nifty_df: pd.DataFrame) -> dict:
-    meta   = fetch_scheme_meta(scheme_code)
-    nav_df = fetch_nav_history(scheme_code)
-
-    now           = datetime.now()
-    latest_nav    = _nav_on_date(nav_df, now)
-    nav_1m        = _nav_on_date(nav_df, _xmonths_ago(1))
-    nav_3m        = _nav_on_date(nav_df, _xmonths_ago(3))
-    nav_6m        = _nav_on_date(nav_df, _xmonths_ago(6))
-    nav_1y        = _nav_on_date(nav_df, _xmonths_ago(12))
-    nav_3y        = _nav_on_date(nav_df, _xmonths_ago(36))
-    nav_5y        = _nav_on_date(nav_df, _xmonths_ago(60))
-
-    inception_nav = nav_df["nav"].iloc[0] if not nav_df.empty else None
-    inception_dt  = nav_df["date"].iloc[0] if not nav_df.empty else None
-    years_since   = ((now - inception_dt).days / 365) if inception_dt else None
-
-    def pct_ret(old, new):
-        if old and new and old > 0:
-            return round((new / old - 1) * 100, 2)
-        return None
-
-    def cagr_n(old, years):
-        return _cagr(old, latest_nav, years) if old and latest_nav else None
-
-    # Benchmark returns (Nifty 50)
-    n_1y   = _nav_on_date(nifty_df, _xmonths_ago(12))
-    n_3y   = _nav_on_date(nifty_df, _xmonths_ago(36))
-    n_5y   = _nav_on_date(nifty_df, _xmonths_ago(60))
-    n_now  = _nav_on_date(nifty_df, now)
-    n_inc  = nifty_df["nav"].iloc[0] if not nifty_df.empty else None
-    n_yrs  = ((now - nifty_df["date"].iloc[0]).days / 365) if not nifty_df.empty else None
-
-    nifty_1y  = pct_ret(n_1y, n_now)
-    nifty_3y  = _cagr(n_3y, n_now, 3) if n_3y else None
-    nifty_5y  = _cagr(n_5y, n_now, 5) if n_5y else None
-    nifty_inc = _cagr(n_inc, n_now, n_yrs) if n_yrs else None
-
-    r1y   = pct_ret(nav_1y, latest_nav)
-    r3y   = cagr_n(nav_3y, 3)
-    r5y   = cagr_n(nav_5y, 5)
-    r_inc = _cagr(inception_nav, latest_nav, years_since) if years_since else None
-
-    portfolio = fetch_portfolio_holdings(scheme_code)
-
-    return {
-        # Identity
-        "scheme_code"      : scheme_code,
-        "scheme_name"      : meta.get("scheme_name", "Unknown"),
-        "fund_house"       : meta.get("fund_house", ""),
-        "category"         : meta.get("scheme_category", ""),
-        "launch_date"      : inception_dt.strftime("%d %b %Y") if inception_dt else "N/A",
-
-        # NAV & returns
-        "latest_nav"       : latest_nav,
-        "ret_1m"           : pct_ret(nav_1m, latest_nav),
-        "ret_3m"           : pct_ret(nav_3m, latest_nav),
-        "ret_6m"           : pct_ret(nav_6m, latest_nav),
-        "ret_1y"           : r1y,
-        "cagr_3y"          : r3y,
-        "cagr_5y"          : r5y,
-        "ret_inception"    : r_inc,
-
-        # Risk
-        "std_dev"          : _std_dev(nav_df, 3),
-
-        # Portfolio
-        "num_stocks"       : portfolio["num_stocks"],
-        "cash_pct"         : portfolio["cash_pct"],
-        "top_holdings"     : portfolio["top_holdings"],
-        "sector_alloc"     : portfolio["sector_alloc"],
-        "market_cap_alloc" : portfolio["market_cap_alloc"],
-        "portfolio_date"   : portfolio["portfolio_date"],
-        "portfolio_source" : portfolio["source"],
-
-        # Benchmark
-        "nifty_1y"         : nifty_1y,
-        "nifty_3y"         : nifty_3y,
-        "nifty_5y"         : nifty_5y,
-        "nifty_inception"  : nifty_inc,
-        "alpha_1y"         : round(r1y - nifty_1y, 2) if r1y and nifty_1y else None,
-        "alpha_3y"         : round(r3y - nifty_3y, 2) if r3y and nifty_3y else None,
-        "alpha_5y"         : round(r5y - nifty_5y, 2) if r5y and nifty_5y else None,
-
-        # Internal
-        "_nav_df"          : nav_df,
+        "source"           : "Not available via free API",
     }
 
 
