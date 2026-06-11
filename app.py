@@ -351,7 +351,7 @@ with tabs[0]:
         disp_df.style
         .format({c: "{:.2f}" for c in ret_cols if c in disp_df.columns}, na_rep="—")
         .format({"Latest NAV (₹)": "{:.4f}", "Num Stocks": "{:.0f}"}, na_rep="—")
-        .applymap(color_returns, subset=ret_cols)
+        .map(color_returns, subset=ret_cols)
         .set_properties(**{"font-size": "0.8rem"})
     )
 
@@ -589,7 +589,7 @@ with tabs[4]:
     st.dataframe(
         bench_df.style
         .format({c: "{:.2f}" for c in bench_df.columns if "(" in c}, na_rep="—")
-        .applymap(_style_alpha, subset=alpha_cols),
+        .map(_style_alpha, subset=alpha_cols)
         use_container_width=True, height=400
     )
 
